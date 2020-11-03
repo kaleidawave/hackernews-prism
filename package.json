@@ -1,0 +1,11 @@
+{
+  "name": "hackernews-prism",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A clone of [Hackernews](https://news.ycombinator.com/news) built with Prism, Rust and Rocket.",
+  "scripts": {
+    "test-client-run": "prism compile-app --context client --run"
+  },
+  "author": "kaleidawave",
+  "license": "MIT"
+}

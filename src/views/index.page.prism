@@ -1,0 +1,32 @@
+<template>
+    <ul #for="const story of stories">
+        <li>
+            <StoryPreview $data="story"></StoryPreview>
+        </li>
+    </ul>
+</template>
+
+<script>
+    import {MainLayout} from "./main.layout.prism";
+    import {StoryPreview, IStoryItem} from "./story-preview.component.prism";
+
+    interface IIndexPageData {
+        stories: Array<IStoryItem>
+    }
+
+    @Title("Hackernews")
+    @Page("/")
+    @UseLayout(MainLayout)
+    class IndexPage extends Component<IIndexPageData> {
+        async load() {
+            const topstories = await IndexPage.getTopStories();
+            this.data.stories = topstories;
+        }
+
+        static async getTopStories() {
+            const request = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+            const stories = await request.json();
+            return Promise.all(stories.slice(0, 5).map(StoryPreview.getStory))
+        }
+    }
+</script>

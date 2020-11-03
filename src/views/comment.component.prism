@@ -1,0 +1,36 @@
+<template>
+    <p #html="text"></p>
+    <span>by {by}</span>
+    <ul #for="const subComment of subComments">
+        <li>
+            <This $data="subComment"></This>
+        </li>
+    </ul>
+</template>
+
+<script>
+    export interface IComment {
+        by: string,
+        id: number,
+        text: string,
+        kids: Array<number>,
+        subComments: Array<IComment>
+    }
+
+    const maxCommentDepth = 5;
+
+    export class Comment extends Component<IComment> {
+        static async getComment(id: number, depth = 1) {
+            const request = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+            const comment = await request.json();
+            if (!comment) throw Error(`Could not find comment under id ${id}`);
+            if (comment.kids && depth < maxCommentDepth) {
+                const subComments = comment.kids.slice(0, 5).map(kidID => Comment.getComment(kidID, depth + 1));
+                comment.subComments = await Promise.all(subComments);
+            } else {
+                comment.subComments = [];
+            }
+            return comment;
+        }
+    }
+</script>

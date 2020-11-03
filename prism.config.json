@@ -1,0 +1,8 @@
+{
+    "projectPath": "./src/views",
+    "backendLanguage": "rust",
+    "serverOutputPath": "./src/templates",
+    "outputPath": "./public",
+    "minify": false,
+    "context": "isomorphic"
+}

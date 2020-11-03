@@ -1,0 +1,46 @@
+<template>
+    <header>
+        <div class="yc-logo">Y</div>
+        <h1>Hacker News</h1>
+        <nav>
+            <ul>
+                <li>
+                    <a relative href="/new">new</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <slot></slot>
+    </main>
+</template>
+
+<script>
+    @Layout
+    export class MainLayout extends Component {}
+</script>
+
+<style>
+    & {
+        max-width: 800px;
+        margin: 10px auto 0;
+    }
+
+    header {
+        background-color: var(--yc-orange);
+        display: flex;
+
+        .yc-logo {
+            padding: 5px;
+        }
+
+        nav>ul {
+            padding: 0;
+            list-style: none;
+            
+            li:not(::last-child) {
+                border-right: 2px solid black;
+            }
+        }
+    }
+</style>
