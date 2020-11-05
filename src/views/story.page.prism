@@ -12,7 +12,10 @@
     import {Comment, IComment} from "./comment.component.prism";
     import {IStoryItem} from "./story-preview.component.prism";
 
+    // @useRustStatement #[derive(Clone, Debug, serde::Deserialize)]
     interface IStoryPageData extends IStoryItem {
+        @useRustStatement(`#[serde(rename(deserialize = "type"))]`)
+        storyType: "job" | "story" | "comment" | "poll" | "pollopt",
         comments: Array<IComment>
     }
 

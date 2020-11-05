@@ -19,8 +19,8 @@
     @UseLayout(MainLayout)
     class IndexPage extends Component<IIndexPageData> {
         async load() {
-            const topstories = await IndexPage.getTopStories();
-            this.data.stories = topstories;
+            const topStories = await IndexPage.getTopStories();
+            this.data.stories = topStories;
         }
 
         static async getTopStories() {

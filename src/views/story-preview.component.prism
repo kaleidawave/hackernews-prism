@@ -1,13 +1,13 @@
 <template>
     <button>&#9650;</button>
     <button>&#9660;</button>
-    <h5 #if="url">
-        <a $href="url">{title}</a>
+    <h5 #if="exists(url)">
+        <a $href="unwrap(url)">{title}</a>
     </h5>
     <h5 #else>{title}</h5>
     <span>
         <!-- Prism does not like variable interpolation where siblings are not text nodes hence wrapping in span -->
-        <span>{score} points | by</span> 
+        <span>{score} points | by</span>
         <a relative $href="`/u/${by}`"> {by} | </a>
         <a relative $href="`/i/${id}`">{descendants} comments</a>
         <!-- TODO comments, time, href etc -->
@@ -15,25 +15,28 @@
 </template>
 
 <script>
-    @useRustStatement(`fn uppercase(string: String) -> String { return string.to_uppercase(); }`)
-    function uppercase(str: string) {
-        return str.toUpperCase();
-    }
+    /** Functions for compat reasons */
+    /* @useRustStatement fn exists(value: &Option<String>) -> bool { value.is_some() } */
+    /* @useRustStatement fn unwrap(value: &Option<String>) -> String { value.as_ref().unwrap().to_string() } */
+    function exists(v) {return v;}
+    function unwrap(v) {return v;}
 
+    // @useRustStatement #[derive(Clone, Debug, serde::Deserialize)]
     export interface IStoryItem {
         id: number,
-        url: string,
+        url?: string,
         by: string,
         score: number,
-        descendants: number,
-        kids: Array<number>
+        descendants: number, // Number of kids
+        kids: Array<number>,
         // This is "type" in hn api but rust does not like "type"
+        @useRustStatement(`#[serde(rename(deserialize = "type"))]`)
         storyType: "job" | "story" | "comment" | "poll" | "pollopt",
-        text: string,
-        title: string
+        text?: string,
+        title: string   
     }
 
-    @Globals(uppercase)
+    @Globals(exists, unwrap)
     export class StoryPreview extends Component<IStoryItem> {
         static getStory(id: number) {
             return fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)

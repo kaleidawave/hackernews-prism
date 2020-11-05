@@ -9,12 +9,15 @@
 </template>
 
 <script>
+    // @useRustStatement #[derive(Clone, Debug, serde::Deserialize)]
     export interface IComment {
         by: string,
         id: number,
+        @useRustStatement("#[serde(default)]")
         text: string,
-        kids: Array<number>,
-        subComments: Array<IComment>
+        subComments: Array<IComment>,
+        @useRustStatement("#[serde(default)]")
+        kids: Array<number>
     }
 
     const maxCommentDepth = 5;

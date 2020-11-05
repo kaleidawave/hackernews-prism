@@ -3,3 +3,4 @@
 private
 public
 src/templates
+.env
