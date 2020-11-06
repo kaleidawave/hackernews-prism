@@ -15,8 +15,8 @@
         id: number,
         @useRustStatement("#[serde(default)]")
         text: string,
-        subComments: Array<IComment>,
         @useRustStatement("#[serde(default)]")
+        subComments: Array<IComment>,
         kids: Array<number>
     }
 
@@ -37,3 +37,9 @@
         }
     }
 </script>
+
+<style>
+    & {
+        font-size: 14px;
+    }
+</style>

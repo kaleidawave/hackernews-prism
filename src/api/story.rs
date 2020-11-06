@@ -10,9 +10,8 @@ pub fn get_story(id: i32) -> Result<IStoryPageData, request::GetError> {
     } else {
         let mut story = result.unwrap();
         let mut comments = Vec::new();
-        for &comment_id in &story.kids[..3] {
+        for &comment_id in &story.kids[..story.kids.len().min(3)] {
             if let Ok(comment) = get_comment(comment_id as i32, 4) {
-                println!("Comment: {:?}", comment);
                 comments.push(comment);
             }
         }
@@ -30,7 +29,7 @@ pub fn get_comment(id: i32, depth: i32) -> Result<IComment, request::GetError> {
         let mut comment = result.unwrap();
         if depth > 0 {
             let mut subComments = Vec::new();
-            for &sub_comment_id in &comment.kids[..3] {
+            for &sub_comment_id in &comment.kids[..comment.kids.len().min(3)] {
                 if let Ok(comment) = get_comment(sub_comment_id as i32, depth - 1) {
                     subComments.push(comment);
                 }

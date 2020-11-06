@@ -1,5 +1,9 @@
 <template>
-    <h5>{title}</h5>
+    <!-- TODO reuse the preview -->
+    <h5 #if="url">
+        <a $href="url">{title}</a>
+    </h5>
+    <h5 #else>{title}</h5>
     <ul class="comments" #for="const comment of comments">
         <li>
             <Comment $data=comment></Comment>
@@ -16,9 +20,12 @@
     interface IStoryPageData extends IStoryItem {
         @useRustStatement(`#[serde(rename(deserialize = "type"))]`)
         storyType: "job" | "story" | "comment" | "poll" | "pollopt",
+        @useRustStatement(`#[serde(default)]`)
         comments: Array<IComment>
     }
 
+    // Doesn't work on rust side with borrowing @Title(`${title} on Hackernews`)
+    @Title("Hackernews")
     @UseLayout(MainLayout)
     @Page("/i/:storyID")
     class StoryPage extends Component<IStoryPageData> {
@@ -35,3 +42,11 @@
         }
     }
 </script>
+
+<style>
+    /* This will also style the lists under comment component */
+    ul {
+        list-style: none;
+        border-left: 3px solid grey;
+    }
+</style>

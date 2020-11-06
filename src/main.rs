@@ -13,7 +13,7 @@ use actix_web::middleware::Logger;
 async fn index_page() -> HttpResponse {
     let results = api::stories::get_best_stories();
     if results.is_err() {
-        println!("{:?}", results);
+        println!("{:?} getting best stories", results);
         return HttpResponse::InternalServerError().finish();
     }
     let mut stories: Vec<IStoryItem> = Vec::new();
@@ -23,7 +23,7 @@ async fn index_page() -> HttpResponse {
         if let Ok(story) = result {
             stories.push(story);
         } else {
-            println!("{:?}", result);
+            println!("{:?} getting story", result);
             return HttpResponse::InternalServerError().finish();
         }
     }
@@ -49,6 +49,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
     env_logger::init();
     
+    println!("Running Hackernews on localhost:8080");
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())

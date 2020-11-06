@@ -5,7 +5,7 @@
         <nav>
             <ul>
                 <li>
-                    <a relative href="/new">new</a>
+                    <a relative href="/">best</a>
                 </li>
             </ul>
         </nav>
@@ -22,6 +22,7 @@
 
 <style>
     & {
+        display: block;
         max-width: 800px;
         margin: 10px auto 0;
     }
@@ -29,17 +30,26 @@
     header {
         background-color: var(--yc-orange);
         display: flex;
+        align-items: center;
 
         .yc-logo {
-            padding: 5px;
+            padding: 5px 9px;
+            color: white;
+            border: 2px solid white;
+            margin: 0 10px;
         }
 
-        nav>ul {
-            padding: 0;
-            list-style: none;
-            
-            li:not(::last-child) {
-                border-right: 2px solid black;
+
+        nav {
+            margin-left: 20px;
+
+            ul {
+                padding: 0;
+                list-style: none;
+                
+                li:not(::last-child) {
+                    border-right: 2px solid white;
+                }
             }
         }
     }

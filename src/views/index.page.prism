@@ -24,9 +24,20 @@
         }
 
         static async getTopStories() {
-            const request = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+            const request = await fetch("https://hacker-news.firebaseio.com/v0/best.json");
             const stories = await request.json();
             return Promise.all(stories.slice(0, 5).map(StoryPreview.getStory))
         }
     }
 </script>
+
+<style>
+    ul {
+        list-style: none;
+        padding-left: 0;
+
+        story-preview {
+            margin-bottom: 18px;
+        }
+    }
+</style>
