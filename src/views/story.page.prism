@@ -1,9 +1,9 @@
 <template>
     <!-- TODO reuse the preview -->
-    <h5 #if="url">
+    <h2 #if="url">
         <a $href="url">{title}</a>
-    </h5>
-    <h5 #else>{title}</h5>
+    </h2>
+    <h2 #else>{title}</h2>
     <ul class="comments" #for="const comment of comments">
         <li>
             <Comment $data=comment></Comment>
@@ -36,7 +36,7 @@
         static async getStory(id) {
             const resp = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
             const story = await resp.json();
-            const comments = story.kids.slice(0, 5).map(commentID => Comment.getComment(commentID));
+            const comments = story.kids.slice(0, 3).map(commentID => Comment.getComment(commentID));
             story.comments = await Promise.all(comments);
             return story;
         }
@@ -47,6 +47,6 @@
     /* This will also style the lists under comment component */
     ul {
         list-style: none;
-        border-left: 3px solid grey;
+        padding-left: 0;
     }
 </style>

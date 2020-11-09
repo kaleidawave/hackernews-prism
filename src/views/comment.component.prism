@@ -1,7 +1,7 @@
 <template>
-    <p #html="text"></p>
-    <span>by {by}</span>
-    <ul #for="const subComment of subComments">
+    <div #html="text"></div>
+    <span class="by">by {by}</span>
+    <ul class="sub-comments" #for="const subComment of subComments">
         <li>
             <This $data="subComment"></This>
         </li>
@@ -13,14 +13,15 @@
     export interface IComment {
         by: string,
         id: number,
-        @useRustStatement("#[serde(default)]")
+        @useRustStatement(`#[serde(default)]`)
         text: string,
-        @useRustStatement("#[serde(default)]")
+        @useRustStatement(`#[serde(default)]`)
         subComments: Array<IComment>,
+        @useRustStatement(`#[serde(default)]`)
         kids: Array<number>
     }
 
-    const maxCommentDepth = 5;
+    const maxCommentDepth = 3;
 
     export class Comment extends Component<IComment> {
         static async getComment(id: number, depth = 1) {
@@ -28,7 +29,7 @@
             const comment = await request.json();
             if (!comment) throw Error(`Could not find comment under id ${id}`);
             if (comment.kids && depth < maxCommentDepth) {
-                const subComments = comment.kids.slice(0, 5).map(kidID => Comment.getComment(kidID, depth + 1));
+                const subComments = comment.kids.slice(0, 3).map(kidID => Comment.getComment(kidID, depth + 1));
                 comment.subComments = await Promise.all(subComments);
             } else {
                 comment.subComments = [];
@@ -40,6 +41,22 @@
 
 <style>
     & {
+        display: block;
+        margin: 10px 0;
+    }
+
+    div {
         font-size: 14px;
+    }
+
+    span.by {
+        display: block;
+        margin-top: 12px;
+        font-style: italic;
+        font-size: 12px;
+    }
+
+    ul.sub-comments {
+        padding-left: 24px;
     }
 </style>

@@ -7,6 +7,12 @@
                 <li>
                     <a relative href="/">best</a>
                 </li>
+                <li>
+                    <a relative href="/top">top</a>
+                </li>
+                <li>
+                    <a relative href="/new">new</a>
+                </li>
             </ul>
         </nav>
     </header>
@@ -39,16 +45,20 @@
             margin: 0 10px;
         }
 
-
         nav {
-            margin-left: 20px;
+            margin-left: 12px;
 
             ul {
                 padding: 0;
                 list-style: none;
-                
-                li:not(::last-child) {
-                    border-right: 2px solid white;
+                display: flex;
+
+                li {
+                    padding: 0 6px;
+                }
+
+                li:not(:last-child) {
+                    border-right: 2px solid black;
                 }
             }
         }

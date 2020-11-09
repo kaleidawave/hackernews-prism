@@ -3,6 +3,6 @@
     "backendLanguage": "rust",
     "serverOutputPath": "./src/templates",
     "outputPath": "./public",
-    "minify": false,
+    "minify": true,
     "context": "isomorphic"
 }

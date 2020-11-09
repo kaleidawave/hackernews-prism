@@ -4,3 +4,4 @@ private
 public
 src/templates
 .env
+node_modules

@@ -4,10 +4,10 @@
         <button @click="downvote">&#9660;</button>
     </div>
     <div>
-        <h5 #if="url">
+        <h2 #if="url">
             <a $href="url">{title}</a>
-        </h5>
-        <h5 #else>{title}</h5>
+        </h2>
+        <h2 #else>{title}</h2>
         <span>
             <!-- Prism does not like variable interpolation where siblings are not text nodes hence wrapping in span -->
             <span>{score} points | by</span>
@@ -26,6 +26,7 @@
         by: string,
         score: number,
         descendants: number, // Number of kids
+        @useRustStatement(`#[serde(default)]`)
         kids: Array<number>,
         // This is "type" in hn api but rust does not like "type"
         @useRustStatement(`#[serde(rename(deserialize = "type"))]`)
@@ -51,7 +52,8 @@
         flex-direction: row;
     }
 
-    h5 {
+    h2 {
+        font-size: 14px;
         margin: 4px 0;
     }
 

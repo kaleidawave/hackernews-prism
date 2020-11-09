@@ -1,9 +1,9 @@
 <template>
-    <ul #for="const story of stories">
+    <ol #for="const story of stories">
         <li>
             <StoryPreview $data="story"></StoryPreview>
         </li>
-    </ul>
+    </ol>
 </template>
 
 <script>
@@ -15,29 +15,25 @@
     }
 
     @Title("Hackernews")
-    @Page("/")
+    @Page("/", "/best", "/top", "/new")
     @UseLayout(MainLayout)
     class IndexPage extends Component<IIndexPageData> {
         async load() {
-            const topStories = await IndexPage.getTopStories();
-            this.data.stories = topStories;
+            const category = new URL(window.location).pathname.replace(/\//g, "") || "best";
+            const stories = await IndexPage.getStories(category);
+            this.data.stories = stories;
         }
 
-        static async getTopStories() {
-            const request = await fetch("https://hacker-news.firebaseio.com/v0/best.json");
+        static async getStories(sort) {
+            const request = await fetch(`https://hacker-news.firebaseio.com/v0/${sort}stories.json`);
             const stories = await request.json();
-            return Promise.all(stories.slice(0, 5).map(StoryPreview.getStory))
+            return Promise.all(stories.slice(0, 10).map(StoryPreview.getStory))
         }
     }
 </script>
 
 <style>
-    ul {
-        list-style: none;
-        padding-left: 0;
-
-        story-preview {
-            margin-bottom: 18px;
-        }
+    story-preview {
+        margin-bottom: 18px;
     }
 </style>

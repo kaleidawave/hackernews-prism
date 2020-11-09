@@ -11,4 +11,13 @@ This project shows the main benefits of using Prism which no other framework / c
 - Smallest bundle size
 - Isomorphic Rust compilation
 - JIT Hydration
-- Layouts?
+
+### Run
+
+```
+git clone https://github.com/kaleidawave/hackernews-prism.git
+cd hackernews-prism
+npm install
+npm run build
+npm start
+```

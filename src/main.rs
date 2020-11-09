@@ -1,40 +1,55 @@
 #![allow(non_snake_case)]
 
 use actix_files::Files;
-use actix_web::{get, App, HttpResponse, HttpServer, web};
+use actix_web::{get, web, App, HttpResponse, HttpServer, middleware};
 mod api;
+use api::stories::{get_stories, StorySorting};
 mod templates;
-use templates::index_page_prism::{render_index_page_page, IIndexPageData};
-use templates::story_page_prism::{render_story_page_page};
-use templates::story_preview_component_prism::IStoryItem;
 use actix_web::middleware::Logger;
+use templates::index_page_prism::{render_index_page_page, IIndexPageData};
+use templates::story_page_prism::render_story_page_page;
 
-#[get("/")]
-async fn index_page() -> HttpResponse {
-    let results = api::stories::get_best_stories();
-    if results.is_err() {
-        println!("{:?} getting best stories", results);
+async fn best_page () -> HttpResponse {
+    let result = get_stories(StorySorting::Best).await;
+    if let Ok(stories) = result {
+        HttpResponse::Ok()
+            .content_type("text/html")
+            .body(render_index_page_page(IIndexPageData { stories }))
+    } else {
+        println!("{:?} getting best stories", result);
         return HttpResponse::InternalServerError().finish();
     }
-    let mut stories: Vec<IStoryItem> = Vec::new();
-    for &story_id in &results.unwrap()[..5] {
-        // TODO parallelization with futures?
-        let result = api::item::get_story_preview(story_id);
-        if let Ok(story) = result {
-            stories.push(story);
-        } else {
-            println!("{:?} getting story", result);
-            return HttpResponse::InternalServerError().finish();
-        }
+}
+
+#[get("/new")]
+async fn new_page () -> HttpResponse {
+    let result = get_stories(StorySorting::New).await;
+    if let Ok(stories) = result {
+        HttpResponse::Ok()
+            .content_type("text/html")
+            .body(render_index_page_page(IIndexPageData { stories }))
+    } else {
+        println!("{:?} getting new stories", result);
+        return HttpResponse::InternalServerError().finish();
     }
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(render_index_page_page(IIndexPageData { stories }))
+}
+
+#[get("/top")]
+async fn top_page() -> HttpResponse {
+    let result = get_stories(StorySorting::Top).await;
+    if let Ok(stories) = result {
+        HttpResponse::Ok()
+            .content_type("text/html")
+            .body(render_index_page_page(IIndexPageData { stories }))
+    } else {
+        println!("{:?} getting top stories", result);
+        return HttpResponse::InternalServerError().finish();
+    }
 }
 
 #[get("/i/{storyID}")]
 async fn story_page(path: web::Path<(i32,)>) -> HttpResponse {
-    let result = api::story::get_story(path.into_inner().0);
+    let result = api::story::get_story(path.into_inner().0).await;
     if result.is_err() {
         println!("{:?}", result);
         return HttpResponse::InternalServerError().finish();
@@ -46,14 +61,17 @@ async fn story_page(path: web::Path<(i32,)>) -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=debug");
+    std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
-    
-    println!("Running Hackernews on localhost:8080");
+    println!("Running Hackernews on http://localhost:8080");
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
-            .service(index_page)
+            .wrap(middleware::Compress::default())
+            .route("/", web::get().to(best_page))
+            .route("/best", web::get().to(best_page))
+            .service(new_page)
+            .service(top_page)
             .service(story_page)
             .service(Files::new("/", "public"))
     })
