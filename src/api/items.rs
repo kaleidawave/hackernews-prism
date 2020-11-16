@@ -1,10 +1,28 @@
 use crate::api::request;
 use crate::templates::story_page_prism::IStoryPageData;
 use crate::templates::comment_component_prism::IComment;
-use futures::future::{try_join_all};
+use crate::templates::story_preview_component_prism::IStoryItem;
+use futures::future::try_join_all;
 use async_recursion::async_recursion;
+use lru::LruCache;
+use lazy_static::lazy_static;
+use std::sync::Mutex;
 
-pub async fn get_story(id: i32) -> Result<IStoryPageData, request::GetError> {
+lazy_static! {
+    static ref STORY_CACHE: Mutex<LruCache<i32, IStoryPageData>> = Mutex::new(
+        LruCache::new(1000)
+    );
+    static ref STORY_PREVIEW_CACHE: Mutex<LruCache<i32, IStoryItem>> = Mutex::new(
+        LruCache::new(1000)
+    );
+}
+
+pub async fn get_story(
+    id: i32, 
+) -> Result<IStoryPageData, request::GetError> {
+    if let Some(cached_story) = STORY_CACHE.lock().unwrap().get(&id) {
+        return Ok(cached_story.clone());
+    }
     let url = format!("https://hacker-news.firebaseio.com/v0/item/{}.json", id);
     let result = request::make_json_get_request::<IStoryPageData>(&url).await;
     if result.is_err() {
@@ -22,8 +40,26 @@ pub async fn get_story(id: i32) -> Result<IStoryPageData, request::GetError> {
         } else {
             story.comments = comments.unwrap();
         }
+        // TODO could spawn thread as to not block while adding to cache ...?
+        STORY_CACHE.lock().unwrap().put(id, story.clone());
         return Ok(story);
     }
+} 
+
+// Same as get_story but does not add comments
+pub async fn get_story_preview(
+    id: i32, 
+) -> Result<IStoryItem, request::GetError> {
+    if let Some(cached_story) = STORY_PREVIEW_CACHE.lock().unwrap().get(&id) {
+        return Ok(cached_story.clone());
+    }
+    let url = format!("https://hacker-news.firebaseio.com/v0/item/{}.json", id);
+    let story_preview = request::make_json_get_request::<IStoryItem>(&url).await;
+    // TODO could spawn thread as to not block while adding to cache ...?
+    if let Ok(valid_story) = &story_preview {
+        STORY_PREVIEW_CACHE.lock().unwrap().put(id, valid_story.clone());
+    }
+    return story_preview;  
 } 
 
 #[async_recursion]

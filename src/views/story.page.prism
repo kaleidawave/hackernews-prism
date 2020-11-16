@@ -24,8 +24,7 @@
         comments: Array<IComment>
     }
 
-    // Doesn't work on rust side with borrowing @Title(`${title} on Hackernews`)
-    @Title("Hackernews")
+    @Title(`${title} on Hackernews`)
     @UseLayout(MainLayout)
     @Page("/i/:storyID")
     class StoryPage extends Component<IStoryPageData> {
