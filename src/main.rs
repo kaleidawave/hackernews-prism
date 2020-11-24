@@ -9,6 +9,7 @@ use actix_web::middleware::Logger;
 use std::time::Instant;
 use templates::index_page_prism::{render_index_page_page, IIndexPageData};
 use templates::story_page_prism::render_story_page_page;
+use templates::user_page_prism::render_user_page_page;
 
 async fn best_page() -> HttpResponse {
     let now = Instant::now();
@@ -71,11 +72,30 @@ async fn story_page(path: web::Path<(i32,)>) -> HttpResponse {
         .body(render_story_page_page(&result.unwrap()));
 }
 
+#[get("/u/{userID}")]
+async fn user_page(path: web::Path<(String,)>) -> HttpResponse {
+    let now = Instant::now();
+    let user_id = path.into_inner().0;
+    let result = api::items::get_user(&user_id).await;
+    println!(
+        "Getting full user {} took {:.2} ns",
+        user_id,
+        now.elapsed().as_nanos()
+    );
+    if result.is_err() {
+        println!("{:?}", result);
+        return HttpResponse::InternalServerError().finish();
+    }
+    return HttpResponse::Ok()
+        .content_type("text/html")
+        .body(render_user_page_page(&result.unwrap()));
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
-    println!("Running Hackernews on http://localhost:8080");
+    println!("Running Hackernews on http://localhost");
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
@@ -85,9 +105,10 @@ async fn main() -> std::io::Result<()> {
             .service(new_page)
             .service(top_page)
             .service(story_page)
+            .service(user_page)
             .service(Files::new("/", "public"))
     })
-    .bind("127.0.0.1:8080")?
+    .bind("0.0.0.0:80")?
     .run()
     .await
 }

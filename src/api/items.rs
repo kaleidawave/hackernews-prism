@@ -2,6 +2,7 @@ use crate::api::request;
 use crate::templates::story_page_prism::IStoryPageData;
 use crate::templates::comment_component_prism::IComment;
 use crate::templates::story_preview_component_prism::IStoryItem;
+use crate::templates::user_page_prism::IUserData;
 use futures::future::try_join_all;
 use async_recursion::async_recursion;
 use lru::LruCache;
@@ -85,4 +86,23 @@ pub async fn get_comment(id: i32, depth: i32) -> Result<IComment, request::GetEr
         }
         return Ok(comment);
     }
+}
+
+pub async fn get_user(
+    user_id: &String, 
+) -> Result<IUserData, request::GetError> {
+    let url = format!("https://hacker-news.firebaseio.com/v0/user/{}.json", user_id);
+    let result = request::make_json_get_request::<IUserData>(&url).await;
+    if let Err(e) = result {
+        return Err(e);
+    }
+    let mut user = result.unwrap();
+    let first_story_ids = &user.kids[..user.kids.len().min(10)];
+    let story_futures = first_story_ids.iter().map(|id| get_story_preview(*id as i32));
+    // TODO stories do not appear ???
+    match try_join_all(story_futures).await {
+        Ok(stories) => {user.stories = stories},
+        Err(err) => {println!("Getting user posts {:?}", err)}
+    }
+    return Ok(user);
 }

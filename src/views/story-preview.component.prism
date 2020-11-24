@@ -5,7 +5,7 @@
     </div>
     <div>
         <h2 #if="url">
-            <a $href="url">{title}</a>
+            <a $href="url" target="_blank" rel="noopener noreferrer">{title}</a>
         </h2>
         <h2 #else>{title}</h2>
         <span>
@@ -36,7 +36,7 @@
     }
 
     export class StoryPreview extends Component<IStoryItem> {
-        static getStory(id: number) {
+        static getStoryPreview(id: number) {
             return fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
                 .then(res => res.json());
         }
