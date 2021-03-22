@@ -1,0 +1,49 @@
+<template>
+    <h1>{id}:</h1>
+    <p #if="about">{about}</p>
+    <h5>{karma} karma</h5>
+    <ol #for="const story of stories">
+        <li>
+            <StoryPreview $data="story"></StoryPreview>
+        </li>
+    </ol>
+</template>
+
+<script>
+    import {MainLayout} from "./main.layout.prism";
+    import {StoryPreview, IStoryItem} from "./story-preview.component.prism";
+
+    // @useRustStatement #[derive(Clone, Debug, serde::Deserialize)]
+    interface IUserData {
+        id: string,
+        karma: number,
+        @useRustStatement(`#[serde(default)]`)
+        about: string,
+        @useRustStatement(`#[serde(default)]`)
+        kids: Array<number>,
+        @useRustStatement(`#[serde(default)]`)
+        stories: Array<IStoryItem>
+    }
+
+    @Title(`${id} on Hackernews`)
+    @Metadata({
+        description: "Prism & Rust based HN clone",
+        image: "/favicon.ico"
+    })
+    @UseLayout(MainLayout)
+    @Page("/u/:userID")
+    class UserPage extends Component<IUserData> {
+        async load({userID}) {
+            this.data = await UserPage.getUser(userID);
+        }
+
+        static async getUser(id) {
+            const resp = await fetch(`https://hacker-news.firebaseio.com/v0/user/${id}.json?print=pretty`);
+            const user = await resp.json();
+            // TODO user response also includes comments and other items:
+            const stories = user.submitted.slice(0, 3).map(StoryPreview.getStoryPreview);
+            user.stories = await Promise.all(stories);
+            return user;
+        }
+    }
+</script>

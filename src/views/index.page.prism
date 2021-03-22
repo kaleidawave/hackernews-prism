@@ -14,11 +14,19 @@
         stories: Array<IStoryItem>
     }
 
-    @Title("Hackernews")
+    @Title("Hacker News")
+    @Metadata({
+        description: "Prism & Rust based HN clone",
+        image: "/favicon.ico"
+    })
     @Page("/", "/best", "/top", "/new")
     @UseLayout(MainLayout)
     class IndexPage extends Component<IIndexPageData> {
         async load() {
+            // TODO temp fix:
+            if (this.data.stories?.length) {
+                this.data.stories.length = 0;
+            }
             const category = new URL(window.location).pathname.replace(/\//g, "") || "best";
             const stories = await IndexPage.getStories(category);
             this.data.stories = stories;
@@ -27,7 +35,9 @@
         static async getStories(sort) {
             const request = await fetch(`https://hacker-news.firebaseio.com/v0/${sort}stories.json`);
             const stories = await request.json();
-            return Promise.all(stories.slice(0, 10).map(StoryPreview.getStory))
+            return stories.slice(0, 10).map(id => ({id}))
+            // If not server components 
+            // return Promise.all(stories.slice(0, 10).map(StoryPreview.getStoryPreview))
         }
     }
 </script>

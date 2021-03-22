@@ -1,8 +1,10 @@
 {
     "projectPath": "./src/views",
+    "templatePath": "./src/views/template.html",
     "backendLanguage": "rust",
     "serverOutputPath": "./src/templates",
     "outputPath": "./public",
     "minify": true,
+    "versioning": false,
     "context": "isomorphic"
 }
