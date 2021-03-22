@@ -8,24 +8,64 @@
             <a $href="url" target="_blank" rel="noopener noreferrer">{title}</a>
         </h2>
         <h2 #else>{title}</h2>
-        <span>
-            <!-- Prism does not like variable interpolation where siblings are not text nodes hence wrapping in span -->
-            <span>{score} points | by</span>
-            <a relative $href="`/u/${by}`"> {by} | </a>
+        <span class="details">
+            {score} points |
+            <a relative $href="`/u/${by}`"> by {by}</a>
+            <span $title="time"> | {timeFromNowToString(time)} ago | </span>
             <a relative $href="`/i/${id}`">{descendants} comments</a>
-            <!-- TODO comments, time, href etc -->
         </span>
     </div>
 </template>
 
 <script>
+    /* @useRustStatement
+fn timeFromNowToString(date: &DateTime<Utc>) -> String {
+    let now = Utc::now();
+
+    const SECONDS_IN_MINUTE: i64 = 60;
+    const SECONDS_IN_HOUR: i64 = SECONDS_IN_MINUTE * 60;
+    const SECONDS_IN_DAY: i64 = SECONDS_IN_HOUR * 24;
+    const SECONDS_IN_YEAR: i64 = SECONDS_IN_DAY * 365; // Ignore leap years for now 
+
+    let secs = (now - *date).num_seconds();
+    match secs {
+        0..=SECONDS_IN_HOUR => format!("{} mins", secs / SECONDS_IN_MINUTE),
+        SECONDS_IN_HOUR..=SECONDS_IN_DAY => format!("{} hours", secs / SECONDS_IN_HOUR),
+        SECONDS_IN_DAY..=SECONDS_IN_YEAR => format!("{} days", secs / SECONDS_IN_DAY),
+        secs => format!("{} years", secs / SECONDS_IN_YEAR)
+    }
+}
+    */
+    function timeFromNowToString(date: Date): string {
+        const now = new Date();
+
+        const SECONDS_IN_MINUTE = 60;
+        const SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
+        const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
+        const SECONDS_IN_YEAR = SECONDS_IN_DAY * 365; // Ignore leap years for now
+
+        let secs = (now - date) / 1000;
+        if (secs < SECONDS_IN_HOUR) {
+            return `${Math.floor(secs / SECONDS_IN_MINUTE)} mins`;
+        } else if (secs < SECONDS_IN_DAY) {
+            return `${Math.floor(secs / SECONDS_IN_HOUR)} hours`;
+        } else if (secs < SECONDS_IN_YEAR) {
+            return `${Math.floor(secs / SECONDS_IN_DAY)} days`;
+        } else {
+            return `${Math.floor(secs / SECONDS_IN_YEAR)} years`;
+        }
+    }
+
     // @useRustStatement #[derive(Clone, Debug, serde::Deserialize)]
     export interface IStoryItem {
         id: number,
         url?: string,
         by: string,
         score: number,
+        @useRustStatement(`#[serde(default)]`)
         descendants: number, // Number of kids
+        @useRustStatement(`#[serde(with = "chrono::serde::ts_seconds")]`)
+        time: Date,
         @useRustStatement(`#[serde(default)]`)
         kids: Array<number>,
         // This is "type" in hn api but rust does not like "type"
@@ -35,10 +75,17 @@
         title: string   
     }
 
+    @RenderFromEndpoint("/story-preview/:id")
+    @WithCapacity(800)
+    @Globals(timeFromNowToString)
     export class StoryPreview extends Component<IStoryItem> {
         static getStoryPreview(id: number) {
             return fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
-                .then(res => res.json());
+                .then(async res => { 
+                    const post = await res.json();
+                    post.time = new Date(post.time * 1000);
+                    return post;
+                });
         }
 
         upvote() {this.data.score++}

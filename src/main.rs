@@ -8,8 +8,9 @@ mod templates;
 use actix_web::middleware::Logger;
 use std::time::Instant;
 use templates::index_page_prism::{render_index_page_page, IIndexPageData};
-use templates::story_page_prism::render_story_page_page;
+use templates::story_page_prism::{render_story_page_page, render_story_page_component_content};
 use templates::user_page_prism::render_user_page_page;
+use templates::story_preview_component_prism::render_story_preview_component_content;
 
 async fn best_page() -> HttpResponse {
     let now = Instant::now();
@@ -54,28 +55,26 @@ async fn top_page() -> HttpResponse {
 }
 
 #[get("/i/{storyID}")]
-async fn story_page(path: web::Path<(i32,)>) -> HttpResponse {
+async fn story_page(web::Path((story_id,)): web::Path<(i32,)>) -> HttpResponse {
     let now = Instant::now();
-    let id = path.into_inner().0;
-    let result = api::items::get_story(id).await;
+    let result = api::items::get_story(story_id).await;
     println!(
         "Getting full story {} took {:.2} ns",
-        id,
+        story_id,
         now.elapsed().as_nanos()
     );
-    if result.is_err() {
-        println!("{:?}", result);
-        return HttpResponse::InternalServerError().finish();
+    if let Ok(story) = result {
+        HttpResponse::Ok()
+            .content_type("text/html")
+            .body(render_story_page_page(&story))
+    } else {
+        HttpResponse::InternalServerError().finish()
     }
-    return HttpResponse::Ok()
-        .content_type("text/html")
-        .body(render_story_page_page(&result.unwrap()));
 }
 
 #[get("/u/{userID}")]
-async fn user_page(path: web::Path<(String,)>) -> HttpResponse {
+async fn user_page(web::Path((user_id,)): web::Path<(String,)>) -> HttpResponse {
     let now = Instant::now();
-    let user_id = path.into_inner().0;
     let result = api::items::get_user(&user_id).await;
     println!(
         "Getting full user {} took {:.2} ns",
@@ -89,6 +88,32 @@ async fn user_page(path: web::Path<(String,)>) -> HttpResponse {
     return HttpResponse::Ok()
         .content_type("text/html")
         .body(render_user_page_page(&result.unwrap()));
+}
+
+// Single story preview
+#[get("/story-preview/{storyID}")]
+async fn single_story_component(web::Path((story_id,)): web::Path<(i32,)>) -> HttpResponse {
+    let result = api::items::get_story_preview(story_id).await;
+    if let Ok(data) = result {
+        HttpResponse::Ok()
+            .content_type("text/html")
+            .body(render_story_preview_component_content(&data))
+    } else {
+        HttpResponse::InternalServerError().finish()
+    }
+}
+
+// Single story page
+#[get("/story/{storyID}")]
+async fn single_story_page(web::Path((story_id,)): web::Path<(i32,)>) -> HttpResponse {
+    let result = api::items::get_story(story_id).await;
+    if let Ok(data) = result {
+        HttpResponse::Ok()
+            .content_type("text/html")
+            .body(render_story_page_component_content(&data))
+    } else {
+        HttpResponse::InternalServerError().finish()
+    }
 }
 
 #[actix_web::main]
@@ -106,6 +131,8 @@ async fn main() -> std::io::Result<()> {
             .service(top_page)
             .service(story_page)
             .service(user_page)
+            .service(single_story_component)
+            .service(single_story_page)
             .service(Files::new("/", "public"))
     })
     .bind("0.0.0.0:80")?

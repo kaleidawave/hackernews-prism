@@ -3,13 +3,14 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "node node_modules/@kaleidawave/prism/out/cli compile-app",
-    "run-client": "node node_modules/@kaleidawave/prism/out/cli compile-app --context client --run",
-    "start": "cargo run"
+    "build-client": "prism compile-app",
+    "build": "npm run build-client && cargo build",
+    "client": "npm run build-client -- --context client --run",
+    "start": "npm run build-client && cargo run"
   },
   "author": "kaleidawave",
   "license": "MIT",
   "devDependencies": {
-    "@kaleidawave/prism": "^1.3.0"
+    "@kaleidawave/prism": "^1.5.0"
   }
 }

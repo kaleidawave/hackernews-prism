@@ -1,9 +1,5 @@
 <template>
-    <!-- TODO reuse the preview -->
-    <h2 #if="url">
-        <a $href="url" target="_blank" rel="noopener noreferrer">{title}</a>
-    </h2>
-    <h2 #else>{title}</h2>
+    <StoryPreview $data="{ url, title, score, id, by, time, descendants, kids, storyType, text }"></StoryPreview>
     <ul class="comments" #for="const comment of comments">
         <li>
             <Comment $data=comment></Comment>
@@ -14,7 +10,7 @@
 <script>
     import {MainLayout} from "./main.layout.prism";
     import {Comment, IComment} from "./comment.component.prism";
-    import {IStoryItem} from "./story-preview.component.prism";
+    import {IStoryItem, StoryPreview} from "./story-preview.component.prism";
 
     // @useRustStatement #[derive(Clone, Debug, serde::Deserialize)]
     interface IStoryPageData extends IStoryItem {
@@ -24,29 +20,40 @@
         comments: Array<IComment>
     }
 
+    @RenderFromEndpoint("/story/:id")
+    @Page("/i/:id")
     @Title(`${title} on Hackernews`)
     @Metadata({
         description: "Prism & Rust based HN clone",
         image: "/favicon.ico"
     })
     @UseLayout(MainLayout)
-    @Page("/i/:storyID")
+    @WithCapacity(20000)
     class StoryPage extends Component<IStoryPageData> {
-        async load({storyID}) {
-            this.data = await StoryPage.getStory(storyID);
+        async load({id}) {
+            // this.data = await StoryPage.getStory(id);
+            this.data.id = id;
         }
 
-        static async getStory(id) {
-            const resp = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-            const story = await resp.json();
-            const comments = story.kids.slice(0, 3).map(Comment.getComment);
-            story.comments = await Promise.all(comments);
-            return story;
-        }
+        // Not needed for server side components:
+        // static async getStory(id) {
+        //     const resp = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+        //     const story = await resp.json();
+        //     story.time = new Date(story.time * 1000);
+        //     if (story.kids) {
+        //         const comments = story.kids.slice(0, 3).map(Comment.getComment);
+        //         story.comments = await Promise.all(comments);
+        //     }
+        //     return story;
+        // }
     }
 </script>
 
 <style>
+    story-preview {
+        margin: 30px 0;
+    } 
+
     /* This will also style the lists under comment component */
     ul {
         list-style: none;
